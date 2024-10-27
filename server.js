@@ -1,21 +1,36 @@
 import express from "express";
-import { PrismaClient } from "@prisma/client/";
+import { Prisma, PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 const app = express();
 app.use(express.json())
 
 
-// Métodos HTTP´s, Endpoints Users, request e responses
+// Métodos HTTP´s, Endpoints Users, request e responses assíncronos
 const users = []
-app.post("/users", (req, res) => {
+app.post("/users", async (req, res) => {
+
+//Promisse para aguardar interação com o db
+ await prisma.user.create({ 
+    data: {
+      name: req.body.name,
+      email: req.body.email,
+      age: req.body.age,
+    }
+  })
+
   users.push(req.body)
+
   res.status(201).json(req.body); //Retorno de Status do nosso post
 });
 
-app.get("/users", (req, res) => {
+app.get("/users", async (req, res) => {
+  
+  const users = await prisma.user.findMany() //Promisse para aguardar interação com o db
+
   res.status(200).json(users); //Retorno de status do nosso get
+
 });
 
 app.listen(3000, () => {
