@@ -33,6 +33,34 @@ app.get("/users", async (req, res) => {
 
 });
 
+app.put("/users/:id", async (req, res) => {
+  const userId = parseInt(req.params.id);
+
+  if (isNaN(userId)){
+    return res.status(400).json({ error: "ID deve ser um valor Int." });
+  }
+  try {
+  //Promisse para aguardar interação com o db
+   const updateUser = await prisma.user.update({ 
+    where: { 
+      id: userId //Passando a váriavel do userId convertida para um INT, como solicitado na Url 
+    },
+      data: {
+        name: req.body.name,
+        email: req.body.email,
+        age: req.body.age,
+      }
+    });
+    users.push(req.body)
+    res.status(201).json(updateUser); //Retorno de Status da nossa edição de usuário
+  }
+  catch (e) {
+    console.log(e)
+    res.status(500).json({ error: "Um erro ocorreu durante a atualização de usuário." });
+  }
+  });
+ 
+
 app.listen(3000, () => {
   console.log("--> O server está de pé!!! :DD");
 }); //Localhost do app, se necessário pode trocar a porta
