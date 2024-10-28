@@ -27,22 +27,25 @@ app.post("/users", async (req, res) => {
 });
 
 app.get("/users", async (req, res) => {
-  let users = [];
+  try {
+    const { id, email, name, age } = req.query;
 
-  if(req.query){
-    users = await prisma.user.findMany({
-      where: {
-        name: req.query.name,
-        email: req.query.email,
-        age: parseInt(req.query.age)
-      }
-    })
-  } else {
-    const users = await prisma.user.findMany() //Promisse para aguardar interação com o db
+    // Construção de filtros em forma de objeto 
+    const filters = {};
+    if (id) filters.id = parseInt(id); // Convertendo o ID para número, se fornecido
+    if (email) filters.email = email;
+    if (name) filters.name = name;
+    if (age) filters.age = parseInt(age); // Convertendo a Idade para número, se fornecido
+
+    // Busca com filtros aplicados
+    const users = await prisma.user.findMany({
+      where: filters
+    });
+
+    res.status(200).json(users); // Retorna os usuários filtrados
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao buscar usuários." });
   }
-
-  res.status(200).json(users); //Retorno de status do nosso get
-
 });
 
 app.put("/users/:id", async (req, res) => {
@@ -66,8 +69,8 @@ app.put("/users/:id", async (req, res) => {
     users.push(req.body)
     res.status(200).json(updateUser); //Retorno de Status da nossa edição de usuário
   }
-  catch (e) {
-    console.log(e)
+  catch (error) {
+    console.log(error)
     res.status(500).json({ error: "Um erro ocorreu durante a atualização de usuário." });
   }
   });

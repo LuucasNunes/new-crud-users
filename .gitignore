@@ -5,11 +5,6 @@ node_modules/
 dist/
 build/
 
-# Variáveis de ambiente e configuração
-.env
-.env.local
-.env.*.local
-
 # Logs
 logs
 *.log
