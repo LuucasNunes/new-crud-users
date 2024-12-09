@@ -1,29 +1,45 @@
 import express from "express";
+import cors from 'cors';
 import { Prisma, PrismaClient } from "@prisma/client";
+import dotenv from "dotenv";
+dotenv.config();
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL, // Isso utiliza a URL do banco de dados do arquivo .env
+    },
+  },  
+});
 
 const app = express();
 app.use(express.json())
+app.use(cors({ origin: "http://localhost:5173" })); // Cors utilizado para definir qual página front tem acesso a nossa API | No momento, qualquer uma
 
 
 // Métodos HTTP´s, Endpoints Users, request e responses assíncronos
 const users = []
 app.post("/users", async (req, res) => {
+//Promisse para aguardar interação com o db  
+  try {
+    await prisma.user.create({ 
+      data: {
+        name: req.body.name,
+        email: req.body.email,
+        age: req.body.age,
+        status: req.body.status || 'ACTIVE'
+      }
+    });
 
-//Promisse para aguardar interação com o db
- await prisma.user.create({ 
-    data: {
-      name: req.body.name,
-      email: req.body.email,
-      age: req.body.age,
-      status: req.body.status || 'ACTIVE'
+    res.status(201).json(req.body); //Retorno de Status do nosso post
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      res.status(409).json({ error: "Email já cadastrado." });
+    } else {
+      console.error(error);
+      res.status(500).json({ error: "Erro ao criar usuário." });
     }
-  })
-
-  users.push(req.body)
-
-  res.status(201).json(req.body); //Retorno de Status do nosso post
+  }
 });
 
 app.get("/users", async (req, res) => {
@@ -44,7 +60,14 @@ app.get("/users", async (req, res) => {
 
     res.status(200).json(users); // Retorna os usuários filtrados
   } catch (error) {
-    res.status(500).json({ error: "Erro ao buscar usuários." });
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      // Erro de unicidade: email já existe
+      res.status(409).json({ error: "Email já cadastrado." });
+    } else {
+      // Outros erros
+      console.error(error);
+      res.status(500).json({ error: "Erro ao criar usuário." });
+    }
   }
 });
 
