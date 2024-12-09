@@ -75,7 +75,7 @@ app.put("/users/:id", async (req, res) => {
   const userId = parseInt(req.params.id);
 
   if (isNaN(userId)){
-    return res.status(400).json({ error: "ID deve ser um valor Int." });
+    return res.status(400).json({ error: "ID deve ser um valor inteiro." });
   }
   try {
   //Promisse para aguardar interação com o db
